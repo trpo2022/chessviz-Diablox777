@@ -1,5 +1,6 @@
+*.out
 *.o
-.main.c.swp
-main.c~
-#main.c#
-main
+*.a
+*.d
+bin/chess
+main 
