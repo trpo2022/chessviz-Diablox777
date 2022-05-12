@@ -1,15 +1,2 @@
-obj/src/chess/*.o
-obj/src/chess/*.a
-obj/src/chess/*.d
-
-
-obj/src/libchess/*.o
-obj/src/libchess/*.a
-obj/src/libchess/*.d
-
-
-
-
-
-bin/chess
-
+bin/
+*.[aod]
