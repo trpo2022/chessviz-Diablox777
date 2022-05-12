@@ -1,50 +1,44 @@
-APP_NAME = chess
-LIB_NAME = libchess
-
-CXX = g++
 CFLAGS = -Wall -Wextra -Werror
 CPPFLAGS = -I src -MP -MMD
-LDFLAGS =
-LDLIBS = -lm
+CPPFLAGST = -I thirdparty -MP -MMD
+CHESS = bin/chess
+TEST_NAME = bin/chess-test
 
-BIN_DIR = bin
-OBJ_DIR = obj
-SRC_DIR = src
+all: $(CHESS)
 
-APP_PATH = $(BIN_DIR)/$(APP_NAME)
-LIB_PATH = $(OBJ_DIR)/$(SRC_DIR)/$(LIB_NAME)/$(LIB_NAME).a
+chess-start: $(CHESS) 
+	./$(CHESS)
 
-SRC_EXT = cpp
+$(CHESS): obj/src/chess/chess.o obj/src/libchess/libchess.a
+	g++ $(CFLAGS) -o $@ $^
 
-APP_SOURCES = $(shell find $(SRC_DIR)/$(APP_NAME) -name '*.$(SRC_EXT)')
-APP_OBJECTS = $(APP_SOURCES:$(SRC_DIR)/%.$(SRC_EXT)=$(OBJ_DIR)/$(SRC_DIR)/%.o)
+obj/src/chess/chess.o: src/chess/chess.cpp
+	g++ -c -I src $(CFLAGS) $(CPPFLAGS) -o $@ $<
 
-LIB_SOURCES = $(shell find $(SRC_DIR)/$(LIB_NAME) -name '*.$(SRC_EXT)')
-LIB_OBJECTS = $(LIB_SOURCES:$(SRC_DIR)/%.$(SRC_EXT)=$(OBJ_DIR)/$(SRC_DIR)/%.o)
-
-DEPS = $(APP_OBJECTS:.o=.d) $(LIB_OBJECTS:.o=.d)
-
-
-.PHONY: all
-all: $(APP_PATH)
-
--include $(DEPS)
-
-$(APP_PATH): $(APP_OBJECTS) $(LIB_PATH)
-	$(CXX) $(CFLAGS) $(CPPFLAGS) $^ -o $@ $(LDFLAGS) $(LDLIBS)
-
-$(LIB_PATH): $(LIB_OBJECTS)
+obj/src/libchess/libchess.a: obj/src/libchess/chessviz.o
 	ar rcs $@ $^
 
-$(OBJ_DIR)/%.o: %.$(SRC_EXT)
-	$(CXX) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
+obj/src/libchess/chessviz.o: src/libchess/chessviz.cpp
+	g++ -c -I src $(CFLAGS) $(CPPFLAGS) -o $@ $<
 
-.PHONY: run
-run: 
-	./$(APP_PATH)
+.PHONY: all clean test chess-start test-start
 
-.PHONY: clean
 clean:
-	$(RM) $(APP_PATH) $(LIB_PATH)
-	find $(OBJ_DIR) -name '*.o' -exec $(RM) '{}' \;
-	find $(OBJ_DIR) -name '*.d' -exec $(RM) '{}' \;
+	rm obj/src/libchess/*.[oad] obj/src/chess/*.[od] $(CHESS) $(TEST_NAME) obj/test/*.[od]
+
+test-start:
+	./$(TEST_NAME)
+
+test: $(TEST_NAME)
+
+$(TEST_NAME): obj/test/main.o obj/test/test.o obj/src/libchess/libchess.a
+	g++ $(CFLAGS) -o $@ $^
+
+obj/test/test.o: test/test.cpp
+	g++ -c $(CFLAGS) $(CPPFLAGS) $(CPPFLAGST) $< -o $@
+
+obj/test/main.o: test/main.cpp
+	g++ -c $(CFLAGS) $(CPPFLAGS) $(CPPFLAGST) $< -o $@
+
+-include obj/src/chess/chess.d obj/src/libchess/chessviz.d obj/test/test.d obj/test/main.d
+
